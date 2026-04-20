@@ -1,0 +1,93 @@
+# 워크플로우의 이름 (GitHub Actions 탭에 표시됩니다)
+
+name: KCC Crawler Workflow
+
+ 
+
+# 워크플로우가 언제 실행될지를 정의합니다
+
+on:
+
+  # 1. 수동 실행: Actions 탭에서 직접 'Run workflow' 버튼을 눌러 실행할 수 있습니다.
+
+  workflow_dispatch:
+
+ 
+
+  # 2. 스케줄 실행: 정해진 시간에 자동으로 실행됩니다.
+
+  schedule:
+
+    # cron 스케줄 표현식: "분 시 일 월 요일" (UTC 기준)
+
+    # UTC 00:00은 한국 시간(KST)으로 매일 아침 9시입니다.
+
+    - cron: '0 0 * * *'
+
+ 
+
+# 워크플로우가 수행할 작업(Job)들을 정의합니다
+
+jobs:
+
+  build-and-send-email:
+
+    # 이 작업이 실행될 가상 환경을 지정합니다 (최신 우분투 리눅스)
+
+    runs-on: ubuntu-latest
+
+ 
+
+    # 실제 작업 단계(Step)들을 순서대로 정의합니다
+
+    steps:
+
+    # 1단계: GitHub 저장소에 있는 코드를 가상 환경으로 가져옵니다.
+
+    - name: Checkout repository code
+
+      uses: actions/checkout@v4
+
+ 
+
+    # 2단계: 파이썬(Python)을 설치하고 환경을 설정합니다.
+
+    - name: Set up Python
+
+      uses: actions/setup-python@v5
+
+      with:
+
+        python-version: '3.9' # 사용할 파이썬 버전
+
+ 
+
+    # 3단계: 크롤링에 필요한 라이브러리(requests, beautifulsoup4)를 설치합니다.
+
+    - name: Install dependencies
+
+      run: |
+
+        python -m pip install --upgrade pip
+
+        pip install requests beautifulsoup4
+
+ 
+
+    # 4단계: 'crawler.py' 파이썬 스크립트를 실행합니다.
+
+    - name: Run Python crawler script
+
+      # GitHub Secrets에 저장해 둔 값들을 스크립트가 사용할 수 있도록 넘겨줍니다.
+
+      env:
+
+        SENDER_EMAIL: ${{ secrets.SENDER_EMAIL }}
+
+        SENDER_PASSWORD: ${{ secrets.SENDER_PASSWORD }}
+
+        RECEIVER_EMAIL: ${{ secrets.RECEIVER_EMAIL }}
+
+      run: python crawler.py
+
+...
